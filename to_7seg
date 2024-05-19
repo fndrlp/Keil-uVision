@@ -1,0 +1,45 @@
+#include "mbed.h"
+#include "sw_tick_serial.h"
+#include "pinout.h"
+
+static BusOut g_ds(DSR_PIN, DSL_PIN);
+static BusOut g_display(SGA_PIN, SGB_PIN, SGC_PIN, SGD_PIN, SGE_PIN, SGF_PIN, SGG_PIN);
+int8_t to_7seg(uint8_t code);
+static int8_t const sseg[] = {
+63, 6, 91, 79, 102, 109, 125, 7, 127, 103
+};
+
+
+static BusOut g_leds(LDR_PIN, LDM_PIN, LDL_PIN);
+int8_t to_led(uint8_t code);
+static int8_t const sled[] = {
+1, 2, 4
+};
+
+int main (void) {
+  sw_tick_serial_init();
+  uint8_t g_7seg_code=0;
+  g_ds=1;
+  
+  uint8_t g_led_code=0;
+  for (;;) {
+    if(gb_swl_evnt){
+      gb_swl_evnt=false;
+      g_leds = ((4 == g_leds) ? 1 : (g_leds << 1));
+      if(g_7seg_code<10){
+        g_display=to_7seg(g_7seg_code);
+        g_7seg_code++;
+      }else{
+        g_7seg_code=0;
+        g_display=to_7seg(g_7seg_code);
+      }
+      
+    }//if(gb_tick_1s_evnt)
+  } // forever
+}
+int8_t to_7seg(uint8_t code){
+  return sseg[code];
+}
+int8_t to_led(uint8_t code){
+  return sled[code];
+}
